@@ -1,6 +1,7 @@
 # Langchain Core
 langchain
 langchain-core
+langchain-community
 
 # OpenAI Integration
 langchain-openai
@@ -13,10 +14,22 @@ langchain-anthropic
 langchain-google-genai
 google-generativeai
 
+# Groq Integration
+langchain-groq
+groq
+
 # Hugging Face Integration
 langchain-huggingface
 transformers
 huggingface-hub
+sentence-transformers
+
+# Deep Learning
+torch
+accelerate
+
+# Image Processing
+Pillow
 
 # Environment variable management
 python-dotenv
@@ -25,9 +38,5 @@ python-dotenv
 numpy
 scikit-learn
 
-
-#ADD BELOW
-#groq
-#pip install torch transformers accelerate
-#pip install -U sentence-transformers
-#installed Pillow-11.3.0 sentence-transformers-5.1.1  
+# Web UI Framework
+streamlit
