@@ -40,3 +40,7 @@ scikit-learn
 
 # Web UI Framework
 streamlit
+
+#pydantic
+pydantic
+email-validator
