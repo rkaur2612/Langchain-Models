@@ -1,8 +1,23 @@
-### Simple Chain
+# Langchain Chains
+
+This document provides an overview of different types of chains available in Langchain and how to use them. 
+
+## Simple Chain
+
+A simple chain is the most basic type of chain where you pipe together a prompt, a model, and an output parser.
+
+**Use Case:** Generate 5 interesting facts about a given topic.
+
+### Code
+
+```python
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_groq import ChatGroq
 
 prompt = PromptTemplate(
-    template ="Generate 5 interesting facts about {topic}",
-    input_variables =['topic']
+    template="Generate 5 interesting facts about {topic}",
+    input_variables=['topic']
 )
 
 model = ChatGroq(model="llama-3.1-8b-instant")
@@ -10,103 +25,120 @@ parser = StrOutputParser()
 
 chain = prompt | model | parser
 
-# this i/p sent to prompt in chain - send prompt to model - model o/p result send to parser - parser return ouptut
-result = chain.invoke({'topic':'cricket'})
+# The input is sent to the prompt, then to the model, and the model's output is sent to the parser.
+result = chain.invoke({'topic': 'cricket'})
+print(result)
+```
 
-    +-------------+       
-     | PromptInput |
-     +-------------+
-            *
-            *
-            *
-    +----------------+
-    | PromptTemplate |
-    +----------------+
-            *
-            *
-            *
-      +----------+
-      | ChatGroq |
-      +----------+
-            *
-            *
-            *
-   +-----------------+
-   | StrOutputParser |
-   +-----------------+
-            *
-            *
-            *
+### Flow
+
+```
++---------------+
+|  PromptInput  |
++---------------+
+        |
+        v
++----------------+
+| PromptTemplate |
++----------------+
+        |
+        v
++----------+
+| ChatGroq |
++----------+
+        |
+        v
++-----------------+
+| StrOutputParser |
++-----------------+
+        |
+        v
 +-----------------------+
 | StrOutputParserOutput |
 +-----------------------+
+```
 
-### Sequential Chain
-# USE CASE - User send topic to model and ask to create detailed report. Then the detailed report again sent to model to generate 5 lines summary
+---
 
+## Sequential Chain
+
+A sequential chain allows you to run multiple chains in sequence, where the output of one chain is the input to the next.
+
+**Use Case:** A user sends a topic to a model to create a detailed report. Then, the detailed report is sent to the model again to generate a 5-line summary.
+
+### Code
+
+```python
+# Assuming prompt1, model, parser, prompt2 are defined
 chain = prompt1 | model | parser | prompt2 | model | parser
+```
 
-  +-------------+       
-     | PromptInput |
-     +-------------+
-            *
-            *
-            *
-    +----------------+
-    | PromptTemplate |
-    +----------------+
-            *
-            *
-            *
-      +----------+
-      | ChatGroq |
-      +----------+
-            *
-            *
-            *
-   +-----------------+
-   | StrOutputParser |
-   +-----------------+
-            *
-            *
-            *
+### Flow
+
+```
++---------------+
+|  PromptInput  |
++---------------+
+        |
+        v
++----------------+
+| PromptTemplate |
++----------------+
+        |
+        v
++----------+
+| ChatGroq |
++----------+
+        |
+        v
++-----------------+
+| StrOutputParser |
++-----------------+
+        |
+        v
 +-----------------------+
 | StrOutputParserOutput |
 +-----------------------+
-            *
-            *
-            *
-    +----------------+
-    | PromptTemplate |
-    +----------------+
-            *
-            *
-            *
-      +----------+
-      | ChatGroq |
-      +----------+
-            *
-            *
-            *
-   +-----------------+
-   | StrOutputParser |
-   +-----------------+
-            *
-            *
-            *
+        |
+        v
++----------------+
+| PromptTemplate |
++----------------+
+        |
+        v
++----------+
+| ChatGroq |
++----------+
+        |
+        v
++-----------------+
+| StrOutputParser |
++-----------------+
+        |
+        v
 +-----------------------+
 | StrOutputParserOutput |
 +-----------------------+
+```
 
-### Parallel Chain
+---
 
-# Use Case - user send document/text to model and asks it to create notes and quiz from it
+## Parallel Chain
 
-# RunnableParallel class used to created parallel chain
+A parallel chain allows you to execute multiple chains in parallel and combine their results.
 
-#pass notes to prompt1 -> model -> parser
-#pass quiz to prompt2 -> model -> parser
-#this chain will return {notes} and {quiz} which is then passed to merge chain as input
+**Use Case:** A user sends a document/text to a model and asks it to create notes and a quiz from it.
+
+### Code
+
+```python
+from langchain_core.runnables import RunnableParallel
+
+# RunnableParallel class is used to create a parallel chain.
+
+# Pass notes to prompt1 -> model -> parser
+# Pass quiz to prompt2 -> model -> parser
+# This chain will return {notes} and {quiz} which is then passed to a merge chain as input.
 
 parallel_chain = RunnableParallel({
     'notes': prompt1 | model | parser,
@@ -118,104 +150,109 @@ merge_chain = prompt3 | model | parser
 chain = parallel_chain | merge_chain
 
 result = chain.invoke({'text': text})
+```
 
+### Flow
+
+```
 +---------------------------+
-          | Parallel<notes,quiz>Input |
-          +---------------------------+
-                ***             ***
-              **                   **
-            **                       **
-+----------------+              +----------------+
-| PromptTemplate |              | PromptTemplate |
-+----------------+              +----------------+
-          *                             *
-          *                             *
-          *                             *
-    +----------+                  +----------+
-    | ChatGroq |                  | ChatGroq |
-    +----------+                  +----------+
-          *                             *
-          *                             *
-          *                             *
-+-----------------+            +-----------------+
-| StrOutputParser |            | StrOutputParser |
-+-----------------+            +-----------------+
-                ***             ***
-                   **         **
-                     **     **
-          +----------------------------+
-          | Parallel<notes,quiz>Output |
-          +----------------------------+
-                         *
-                         *
-                         *
-                +----------------+
-                | PromptTemplate |
-                +----------------+
-                         *
-                         *
-                         *
-                   +----------+
-                   | ChatGroq |
-                   +----------+
-                         *
-                         *
-                         *
-                +-----------------+
-                         *
-                         *
-                         *
-                +-----------------+
-                | StrOutputParser |
-                +-----------------+
-                         *
-                         *
-                         *
-            +-----------------------+
-            | StrOutputParserOutput |
-            +-----------------------+
+| Parallel<notes,quiz>Input |
++---------------------------+
+       /               \
+      /                 \
+     v                   v
++----------------+   +----------------+
+| PromptTemplate |   | PromptTemplate |
++----------------+   +----------------+
+     |                   |
+     v                   v
++----------+         +----------+
+| ChatGroq |         | ChatGroq |
++----------+         +----------+
+     |                   |
+     v                   v
++-----------------+   +-----------------+
+| StrOutputParser |   | StrOutputParser |
++-----------------+   +-----------------+
+      \                 /
+       \               /
+        v             v
++----------------------------+
+| Parallel<notes,quiz>Output |
++----------------------------+
+              |
+              v
++----------------+
+| PromptTemplate |
++----------------+
+              |
+              v
++----------+
+| ChatGroq |
++----------+
+              |
+              v
++-----------------+
+| StrOutputParser |
++-----------------+
+              |
+              v
++-----------------------+
+| StrOutputParserOutput |
++-----------------------+
+```
 
-### Conditional Chain
+---
 
-# Use Case - User send feedback -> model classfies as positive/negative -> then sentiment sent to another model to reply back with approapriate response 
+## Conditional Chain
 
-Runnable branch used to execute conditional branches
+A conditional chain allows you to execute different branches of a chain based on a condition. `RunnableBranch` is used for this purpose.
 
-# if condition1 = true -> run chain1 
+**Use Case:** A user sends feedback. The model classifies it as positive or negative. Then, the sentiment is sent to another model to reply with an appropriate response.
+
+### Code
+
+```python
+from langchain_core.runnables import RunnableBranch
+
+# if condition1 = true -> run chain1
 # else if condition2 = true -> run chain2
-# else default chain
+# else default_chain
+
 branch_chain = RunnableBranch(
     (condition1, chain1),
     (condition2, chain2),
-    default chain
+    default_chain
 )
+```
 
- +-------------+      
-    | PromptInput |
-    +-------------+
-            *
-            *
-            *
-   +----------------+
-   | PromptTemplate |
-   +----------------+
-            *
-            *
-            *
-      +----------+
-      | ChatGroq |
-      +----------+
-            *
-            *
-            *
+### Flow
+
+```
++-------------+
+| PromptInput |
++-------------+
+      |
+      v
++----------------+
+| PromptTemplate |
++----------------+
+      |
+      v
++----------+
+| ChatGroq |
++----------+
+      |
+      v
 +----------------------+
 | PydanticOutputParser |
 +----------------------+
-            *
-            *
-            *
-       +--------+
-       | Branch |
-       +--------+
-| PydanticOutputParser |
-+----------------------+
+      |
+      v
++--------+
+| Branch |
++--------+
+      |
+      v
+(Executes one of the provided chains based on the condition)
+```
