@@ -46,3 +46,5 @@ pydantic
 email-validator
 
 grandalf
+pyPDF
+bs4
